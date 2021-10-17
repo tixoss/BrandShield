@@ -99,6 +99,9 @@
     <Compile Include="Controllers\TranslationController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\Impls\CloudExecuterFactory.cs" />
+    <Compile Include="Services\ICloudExecuterFactory.cs" />
+    <Compile Include="Services\IExecuterConnection.cs" />
     <Compile Include="Services\ITranslationService.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
@@ -112,5 +115,6 @@
       <Name>Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

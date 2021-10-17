@@ -31,6 +31,10 @@ namespace ServiceApplication
             builder.RegisterApiControllers(typeof(Startup).Assembly);
 
             // ...
+            builder.Register(ctx => CloudExecuterFactory.GetInstance(Consts.LIMIT_MACHINES))
+                .As<ICloudExecuterFactory>()
+                .SingleInstance();
+
             builder.RegisterType<FakeTranslationService>().As<ITranslationService>();
 
             var container = builder.Build();
