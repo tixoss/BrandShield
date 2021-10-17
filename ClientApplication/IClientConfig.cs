@@ -8,7 +8,9 @@
     // TODO FSY: From hardcode to config
     internal class ClientConfig : IClientConfig
     {
-        public string BaseApiUrl => "http://localhost:60362/api";
+        public string BaseApiUrl => Consts.BASE_API_URL;
+
+        private ClientConfig() { }
 
         public static IClientConfig Default => new ClientConfig();
     }

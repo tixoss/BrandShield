@@ -11,6 +11,8 @@ namespace BrandShield.ClientApplication
 {
     class Program
     {
+        private static int ErrorCount = 0;
+
         static async Task Main(string[] args)
         {
             var (paramsParsed, countOfParallel) = ParseParams(args);
@@ -20,6 +22,8 @@ namespace BrandShield.ClientApplication
             CancellationToken token = source.Token;
 
             var workers = new List<Task>();
+
+            var config = ClientConfig.Default;
 
             var mainTask = Task.Factory.StartNew(() =>
             {
@@ -36,9 +40,10 @@ namespace BrandShield.ClientApplication
                     {
                         var id = (int)state;
                         var rnd = new ThreadSafeRandom();
-                        var client = new FakeClient(id);
+                        //var client = new FakeClient(id);
+                        var client = new Client(config);
 
-                        while (!token.IsCancellationRequested)
+                        while (!token.IsCancellationRequested && ErrorCount < Consts.MAX_ERROR_COUNT)
                         {
                             var taskCount = rnd.Next(1, CommonConsts.MAX_TASKS_PER_REQUEST + 1);
                             var delay = rnd.Next(Consts.MIN_DELAY_OF_BREAK, Consts.MAX_DELAY_OF_BREAK + 1);
@@ -46,6 +51,13 @@ namespace BrandShield.ClientApplication
                             Console.WriteLine($"Worker {id,5}: Send request with {taskCount,6} tasks and stop after {delay,3} seconds.");
 
                             await PostWaitDelete(client, taskCount, delay, token);
+                        }
+
+                        if (ErrorCount >= Consts.MAX_ERROR_COUNT)
+                        {
+                            Console.WriteLine($"Worker {id,5}: completed.");
+                            // TODO FSY: Count started - count completed, maybe it's time to stop?!
+                            //Console.WriteLine($"Press any key.");
                         }
                     }, i, TaskCreationOptions.LongRunning);
 
@@ -67,11 +79,20 @@ namespace BrandShield.ClientApplication
         private static async Task PostWaitDelete(IClient client, int taskCount, int delaySec, CancellationToken ct)
         {
             var tasks = Enumerable.Range(1, taskCount).Select(x => new TranslationTask(x));
-            var executionId = await client.PostTranslationTasks(tasks).ConfigureAwait(false);
 
-            await Task.Delay(new TimeSpan(0, 0, delaySec), ct).ConfigureAwait(false);
+            try
+            {
+                var executionId = await client.PostTranslationTasks(tasks).ConfigureAwait(false);
 
-            await client.DeleteTranslationTasks(executionId).ConfigureAwait(false);
+                await Task.Delay(new TimeSpan(0, 0, delaySec), ct).ConfigureAwait(false);
+
+                await client.DeleteTranslationTasks(executionId).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Interlocked.Increment(ref ErrorCount);
+                Console.WriteLine($"Error: {ex.Message}");
+            }
         }
 
         private static (bool, int) ParseParams(string[] args)
