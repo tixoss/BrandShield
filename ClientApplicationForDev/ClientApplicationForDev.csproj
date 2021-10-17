@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2048460E-7118-4AAA-88A8-5A8433137400}</ProjectGuid>
+    <ProjectGuid>{070BEDFB-151D-4238-8C40-5AFF76EA864E}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>BrandShield.ClientApplication</RootNamespace>
-    <AssemblyName>ClientApplication</AssemblyName>
+    <RootNamespace>BrandShield.ClientApplicationForDev</RootNamespace>
+    <AssemblyName>ClientApplicationForDev</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -67,7 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{33FF7494-60A4-441C-9F66-14C119CB261A}</Project>
+      <Project>{33ff7494-60a4-441c-9f66-14c119cb261a}</Project>
       <Name>Common</Name>
     </ProjectReference>
   </ItemGroup>

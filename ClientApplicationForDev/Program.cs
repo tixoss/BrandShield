@@ -1,4 +1,4 @@
-﻿using BrandShield.ClientApplication;
+﻿using BrandShield.ClientApplicationForDev;
 using BrandShield.Common;
 using NDesk.Options;
 using System;
@@ -6,13 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CommonConsts = BrandShield.Common.Consts;
-using Consts = BrandShield.ClientApplication.Consts;
+using Consts = BrandShield.ClientApplicationForDev.Consts;
 
-namespace ClientApplication
+namespace BrandShield.ClientApplicationForDev
 {
-    class ProgramOld
+    class Program
     {
-        static async Task MainOld(string[] args)
+        static async Task Main(string[] args)
         {
             var (paramsParsed, taskCount, delaySec) = ParseParams(args);
             if (!paramsParsed) { return; }
@@ -25,14 +25,24 @@ namespace ClientApplication
 
         private static async Task Execute(int taskCount, int delaySec)
         {
-            var client = new FakeClient(0);
+            //var client = new FakeClient(0);
+            var config = ClientConfig.Default;
+            var client = new Client(config);
 
             var tasks = Enumerable.Range(1, taskCount).Select(x => new TranslationTask(x));
-            var executionId = await client.PostTranslationTasks(tasks).ConfigureAwait(false);
+            try
+            {
+                var executionId = await client.PostTranslationTasks(tasks).ConfigureAwait(false);
 
-            await Task.Delay(new TimeSpan(0, 0, delaySec)).ConfigureAwait(false);
+                await Task.Delay(new TimeSpan(0, 0, delaySec)).ConfigureAwait(false);
 
-            await client.DeleteTranslationTasks(executionId).ConfigureAwait(false);
+                await client.DeleteTranslationTasks(executionId).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
         }
 
         private static (bool, int, int) ParseParams(string[] args)
@@ -44,8 +54,8 @@ namespace ClientApplication
 
             var optionSet = new OptionSet() {
                 {
-                    "t|tasks=", 
-                    $"the {{COUNT}} of tasks. Max={CommonConsts.MAX_TASKS_PER_REQUEST}", 
+                    "t|tasks=",
+                    $"the {{COUNT}} of tasks. Max={CommonConsts.MAX_TASKS_PER_REQUEST}",
                     (int v) => count = v },
                 {
                     "d|delay=",
@@ -90,7 +100,7 @@ namespace ClientApplication
                 Console.WriteLine($"Use random count of tasks: {count}");
                 return (true, count.Value);
             }
-            
+
             if (count.Value < 1 || count.Value > CommonConsts.MAX_TASKS_PER_REQUEST)
             {
                 WriteError("The count of tasks is invalid.");

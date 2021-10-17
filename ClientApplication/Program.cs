@@ -11,7 +11,7 @@ namespace BrandShield.ClientApplication
 {
     class Program
     {
-        private static int ErrorCount = 0;
+        private static int _errorCount = 0;
 
         static async Task Main(string[] args)
         {
@@ -43,7 +43,7 @@ namespace BrandShield.ClientApplication
                         //var client = new FakeClient(id);
                         var client = new Client(config);
 
-                        while (!token.IsCancellationRequested && ErrorCount < Consts.MAX_ERROR_COUNT)
+                        while (!token.IsCancellationRequested && _errorCount < Consts.MAX_ERROR_COUNT)
                         {
                             var taskCount = rnd.Next(1, CommonConsts.MAX_TASKS_PER_REQUEST + 1);
                             var delay = rnd.Next(Consts.MIN_DELAY_OF_BREAK, Consts.MAX_DELAY_OF_BREAK + 1);
@@ -53,7 +53,7 @@ namespace BrandShield.ClientApplication
                             await PostWaitDelete(client, taskCount, delay, token);
                         }
 
-                        if (ErrorCount >= Consts.MAX_ERROR_COUNT)
+                        if (_errorCount >= Consts.MAX_ERROR_COUNT)
                         {
                             Console.WriteLine($"Worker {id,5}: completed.");
                             // TODO FSY: Count started - count completed, maybe it's time to stop?!
@@ -90,7 +90,7 @@ namespace BrandShield.ClientApplication
             }
             catch (Exception ex)
             {
-                Interlocked.Increment(ref ErrorCount);
+                Interlocked.Increment(ref _errorCount);
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }

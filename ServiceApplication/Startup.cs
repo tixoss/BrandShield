@@ -1,13 +1,8 @@
 ﻿using Autofac;
 using Autofac.Integration.WebApi;
+using log4net;
 using Owin;
 using ServiceApplication.Services;
-using ServiceApplication.Services.Impls;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace ServiceApplication
@@ -31,15 +26,17 @@ namespace ServiceApplication
             var builder = new ContainerBuilder();
             builder.RegisterApiControllers(typeof(Startup).Assembly);
 
-            // ...
-            builder.Register(ctx => CloudExecuterFactory.GetInstance(Consts.LIMIT_MACHINES))
+            builder.Register(ctx => LogManager.GetLogger(typeof(Startup).Assembly.GetName().Name))
+                .As<ILog>();
+
+            builder.Register(ctx => CloudExecuterFactory.GetInstance(Consts.LIMIT_MACHINES, LogManager.GetLogger(typeof(CloudExecuterFactory))))
                 .As<ICloudExecuterFactory>()
                 .SingleInstance();
-            builder.Register(ctx => BuildFreeExecuterHolder(ctx, Consts.ALWAYS_LIVE_MACHINES))
-                .As<IFreeExecuterHolder>()
+            builder.Register(ctx => ExecuterRegister.GetInstance(ctx.Resolve<ICloudExecuterFactory>(), LogManager.GetLogger(typeof(ExecuterRegister))))
+                .As<IExecuterRegister>()
                 .SingleInstance();
 
-            builder.RegisterType<FakeTranslationService>().As<ITranslationService>();
+            builder.RegisterType<TranslationService>().As<ITranslationService>();
 
             var container = builder.Build();
             config.DependencyResolver = new AutofacWebApiDependencyResolver(container);
@@ -54,31 +51,6 @@ namespace ServiceApplication
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
-        }
-
-        private static IFreeExecuterHolder BuildFreeExecuterHolder(IComponentContext ctx, int count)
-        {
-            var factory = ctx.Resolve<ICloudExecuterFactory>();
-            try
-            {
-                var executerConnectionTask = BuildBunchLiveExecuters(factory, count).Select(x => x.AsTask()).ToArray();
-
-                Task.WhenAll(executerConnectionTask);
-
-                return new FreeExecuterHolder(Consts.ALWAYS_LIVE_MACHINES, executerConnectionTask.Select(x => x.Result));
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Application initialization failed", ex);
-            }
-        }
-
-        private static IEnumerable<ValueTask<IExecuterConnection>> BuildBunchLiveExecuters(ICloudExecuterFactory factory, int count)
-        {
-            for (var i = 0; i < count; i++)
-            {
-                yield return factory.GetNewAsync();
-            }
         }
     }
 }
