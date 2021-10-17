@@ -1,12 +1,11 @@
 ﻿using BrandShield.Common;
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ServiceApplication.Services
 {
-    public class CloudExecuterFactory : ICloudExecuterFactory
+    internal class CloudExecuterFactory : ICloudExecuterFactory
     {
         private static readonly object _lock = new object();
         private static ICloudExecuterFactory _instance = null;
@@ -73,7 +72,7 @@ namespace ServiceApplication.Services
 
             public Task ExecuteAsync(TranslationTask translationTask)
             {
-                throw new NotImplementedException();
+                return Task.Delay(200);
             }
 
             public Task ExecuteAsync(IEnumerable<TranslationTask> translationTasks)

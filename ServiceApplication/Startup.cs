@@ -2,6 +2,7 @@
 using Autofac.Integration.WebApi;
 using Owin;
 using ServiceApplication.Services;
+using ServiceApplication.Services.Impls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,9 @@ namespace ServiceApplication
             builder.Register(ctx => CloudExecuterFactory.GetInstance(Consts.LIMIT_MACHINES))
                 .As<ICloudExecuterFactory>()
                 .SingleInstance();
+            builder.Register(ctx => BuildFreeExecuterHolder(ctx, Consts.ALWAYS_LIVE_MACHINES))
+                .As<IFreeExecuterHolder>()
+                .SingleInstance();
 
             builder.RegisterType<FakeTranslationService>().As<ITranslationService>();
 
@@ -50,6 +54,31 @@ namespace ServiceApplication
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
+        }
+
+        private static IFreeExecuterHolder BuildFreeExecuterHolder(IComponentContext ctx, int count)
+        {
+            var factory = ctx.Resolve<ICloudExecuterFactory>();
+            try
+            {
+                var executerConnectionTask = BuildBunchLiveExecuters(factory, count).Select(x => x.AsTask()).ToArray();
+
+                Task.WhenAll(executerConnectionTask);
+
+                return new FreeExecuterHolder(Consts.ALWAYS_LIVE_MACHINES, executerConnectionTask.Select(x => x.Result));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Application initialization failed", ex);
+            }
+        }
+
+        private static IEnumerable<ValueTask<IExecuterConnection>> BuildBunchLiveExecuters(ICloudExecuterFactory factory, int count)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                yield return factory.GetNewAsync();
+            }
         }
     }
 }
