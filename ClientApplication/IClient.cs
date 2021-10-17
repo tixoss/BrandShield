@@ -16,21 +16,28 @@ namespace BrandShield.ClientApplication
 
     internal class FakeClient : IClient
     {
+        public int Id { get; }
+
+        public FakeClient(int id)
+        {
+            Id = id;
+        }
+
         public async Task<Guid> PostTranslationTasks(IEnumerable<TranslationTask> tasks)
         {
-            Console.WriteLine($"Post {tasks.Count()} tasks");
+            Console.WriteLine($"{Id,5} Post {tasks.Count(), 6} tasks");
 
             await Task.Delay(2000).ConfigureAwait(false);
 
             var retVal = Guid.NewGuid();
 
-            Console.WriteLine($"Return executionId = {retVal}");
+            Console.WriteLine($"{Id,5} Return executionId = {retVal}");
             return retVal;
         }
 
         public async Task DeleteTranslationTasks(Guid executionId)
         {
-            Console.WriteLine($"Delete executionId = {executionId}");
+            Console.WriteLine($"{Id,5} Delete executionId = {executionId}");
             await Task.Delay(2000).ConfigureAwait(false);
         }
     }

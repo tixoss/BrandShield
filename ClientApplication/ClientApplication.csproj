@@ -59,6 +59,7 @@
     <Compile Include="IClient.cs" />
     <Compile Include="IClientConfig.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ProgramForTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
